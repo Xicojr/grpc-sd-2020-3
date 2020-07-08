@@ -1,72 +1,115 @@
-// definição do caminho do arquivo proto
-const PROTO_PATH = "./car.proto";
+const PROTO_PATH = "./restautante.proto";
 
 const grpc = require('grpc');
 
 const protoLoader = require('@grpc/proto-loader');
 
-// carregamento do arquivo proto e geração das definições
+
 const packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
-    {keepCase: true,
-     longs: String,
-     enums: String,
-     defaults: true,
-     oneofs: true
+    {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true
     });
 
-// carregamento do código do serviço
+
 var protoDescriptor = grpc.loadPackageDefinition(packageDefinition).car;
 
-// "banco de dados" de carros
-const listaCarros = [];
 
-// implementação da funcionalidade "ListarCarros"
-function listarCarros(call, callback) {
-    // retorna resultado para o cliente
+const listaDoCardapio = [];
+const itensDoPedido = [];
+
+
+function listarCardapio(call, callback) {
+    
     callback(null, {
-        carros: listaCarros
+        cardapio: listaCardapio
     });
 }
 
-// implementação da funcionalidade "ConsultarCarro"
-function consultarCarro(call, callback) {
-    // obtém a posição passada como parâmetro pelo cliente
+
+function consultarItemDoCardapio(call, callback) {
+    
     const pos = call.request.posicao;
 
-    // retorna resultado para o cliente
-    callback(null, listaCarros[pos]);
+    
+    callback(null, listaCardapio[pos]);
 }
 
-// implementação da funcionalidade "RegistrarCarro"
-function registrarCarro(call, callback) {
-    // obtém as informações do carro a ser registrado, passado como parâmetro pelo cliente
-    const carro = {
-        modelo: call.request.modelo,
-        marca: call.request.marca,
-        cor: call.request.cor,
+
+function registrarItemNoCardapio(call, callback) {
+    
+    const item = {
+        item: call.request.item,
+        modelo: call.request.valor
     };
 
-    // adiciona o objeto carro recebido no "banco de dados"
-    listaCarros.push(carro);
 
-    // retorna resultado para o cliente
+    
+    listaDoCardapio.push(item);
+
+    
     callback(null, {})
 }
 
-// instancia objeto do servidor
+function removerItemDoCardapio(call, callback) {
+    const item = call.request.item;
+
+    const existeNoCardapio = listaDoCardapio.findIndex(itemDoCardapio => itemDoCardapio.item === item);
+
+    if (!existeNoCardapio) {
+        callback(null, "Nao existe este item no cardapio");
+    } else {
+        listaDoCardapio.splice(existeNoCardapio, 1);
+        callback(null)
+    }
+}
+
+function adicionarItemAoPedido(call, callback) {
+    const item = {
+        item: call.request.item,
+    }
+
+    const verificarNoCardapio = listaDoCardapio.find(pedido => pedido.item === item);
+
+    if (!verificarNoCardapio) {
+        callback(null, "Nao existe este item no cardapio")
+    } else {
+        itensDoPedido.push(verificarNoCardapio);
+
+        callback(null, {})
+    }
+
+    
+}
+
+function solicitarPedido(call, callback) {
+    const total = listaDoCardapio.sum("valor");
+
+    itensDoPedido = [];
+
+    callback(null, total);
+}
+
+
 const server = new grpc.Server();
 
-// adiciona as implementações das funções ao serviço exportado de carro
+
 server.addService(protoDescriptor.ServicoCarro.service,
     {
-        ListarCarros: listarCarros,
-        ConsultarCarro: consultarCarro,
-        RegistrarCarro: registrarCarro,
+        ListarCardapio: listarCardapio,
+        ConsultarCardapio: consultarItemDoCardapio,
+        RegistrarCardapio: registrarItemNoCardapio,
+        RemoverDoCardapio: removerItemDoCardapio,
+        AdicionarPedido: adicionarItemAoPedido,
+        SolicitarPedido: solicitarPedido,
     });
 
-// associa o serviço a todos os endereços e a porta 50051 (sem segurança)
+
 server.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());
 
-// inicia o serviço
+
 server.start();
