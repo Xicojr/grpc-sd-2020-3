@@ -16,7 +16,7 @@ const packageDefinition = protoLoader.loadSync(
     });
 
 
-var protoDescriptor = grpc.loadPackageDefinition(packageDefinition).car;
+var protoDescriptor = grpc.loadPackageDefinition(packageDefinition).restaurante;
 
 
 const listaDoCardapio = [];
@@ -96,7 +96,6 @@ function solicitarPedido(call, callback) {
 
 
 const server = new grpc.Server();
-
 
 server.addService(protoDescriptor.ServicoCarro.service,
     {
