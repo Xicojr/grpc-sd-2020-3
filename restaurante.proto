@@ -23,7 +23,7 @@ message Vazia { }
 
 service Servicocardapio {
     rpc ListarCardapio (Vazia) returns (ListaDoCardapio);
-    rpc ConsultarCardapio (Posicao) returns (Carro);
+    rpc ConsultarCardapio (Posicao) returns (Vazia);
     rpc RegistrarCardapio (Item) returns (Vazia);
     rpc RemoverDoCardapio (Item) returns (Vazia);
     rpc AdicionarPedido (Item) returns (Vazia);
